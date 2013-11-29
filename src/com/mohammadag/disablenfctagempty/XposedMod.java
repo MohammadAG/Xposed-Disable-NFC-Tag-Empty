@@ -11,9 +11,13 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 public class XposedMod implements IXposedHookLoadPackage {
 	public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
-		if (!lpparam.packageName.equals("com.android.apps.tag"))
-			return;
-		
+		if (lpparam.packageName.equals("com.android.apps.tag")
+				|| lpparam.packageName.equals("com.google.android.tag")) {
+			doHooks(lpparam);
+		}
+	}
+
+	private void doHooks(LoadPackageParam lpparam) {
 		Class<?> TagViewer = XposedHelpers.findClass("com.android.apps.tag.TagViewer", lpparam.classLoader);
 		final Class<?> NdefMessageParser =
 				XposedHelpers.findClass("com.android.apps.tag.message.NdefMessageParser", lpparam.classLoader);
@@ -26,15 +30,15 @@ public class XposedMod implements IXposedHookLoadPackage {
 					activity.finish();
 					return;
 				}
-				
+
 				NdefMessage message = (NdefMessage) parameter;		
-	            Object parsedMsg = XposedHelpers.callStaticMethod(NdefMessageParser, "parse", message);
-	            List<?> records = (List<?>) XposedHelpers.callMethod(parsedMsg, "getRecords");
-	            final int size = records.size();
-	            if (size == 0) {
-	            	activity.finish();
-	            	return;
-	            }
+				Object parsedMsg = XposedHelpers.callStaticMethod(NdefMessageParser, "parse", message);
+				List<?> records = (List<?>) XposedHelpers.callMethod(parsedMsg, "getRecords");
+				final int size = records.size();
+				if (size == 0) {
+					activity.finish();
+					return;
+				}
 			}
 		});
 	}
